@@ -1,0 +1,30 @@
+{
+  "name": "redux-lift",
+  "version": "0.1.0",
+  "description": "Store composition for redux.",
+  "author": "Izaak Schroeder <izaak.schroeder@gmail.com>",
+  "license": "CC0-1.0",
+  "repository": "izaakschroeder/redux-render",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "prepublish": "./node_modules/.bin/babel -s inline -d dist/src src/",
+    "pretest": "npm run prepublish && ./node_modules/.bin/babel -s inline -d dist/test test/",
+    "test": "./node_modules/.bin/mocha dist/test/spec/"
+  },
+  "dependencies": {
+    "redux": "^3.0.3"
+  },
+  "peerDependencies": {
+    "redux": ">=2.0.0"
+  },
+  "devDependencies": {
+    "babel": "^5.8.23",
+    "chai": "^3.4.0",
+    "is-promise": "^2.1.0",
+    "mocha": "^2.3.3",
+    "redux": "^3.0.3",
+    "redux-promise": "^0.5.0",
+    "sinon": "^1.17.2",
+    "sinon-chai": "^2.8.0"
+  }
+}
