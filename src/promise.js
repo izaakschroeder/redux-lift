@@ -1,43 +1,65 @@
 
+import { liftState, unliftState, liftAction, unliftAction } from './lift';
+import isPromise from 'is-promise';
 
-function reducer(pass) {
+function liftReducer(reducer) {
   return (state, action) => {
-    const { promises } = state;
-    console.log('PROMISE ACTION', state, action);
-
-    switch(type) {
+    const [child, promises] = unliftState(state);
+    switch(action.type) {
     case 'PROMISE_DISPATCH':
-      return { promises: [ ...promises, action.action.payload ] };
+      return liftState(child, [ ...promises, action.action.payload ]);
     case 'PROMISE_ERROR':
     case 'PROMISE_RESULT':
-      return pass(state, {
-        ...action.action,
+      return liftState(reducer(child, {
+        type: action.action.type,
         payload: action.payload,
         error: action.error,
-      });
+      }), promises);
+    case 'CHILD':
+      return liftState(reducer(unliftAction(action)), promises);
     default:
       return state;
     }
   }
 }
 
-function initialState() {
-  return {
-    promises: []
-  };
+function liftInitialState(initialState) {
+  return liftState(initialState, []);
 }
 
-function dispatch(pass, dispatch) {
-  return action => {
-    if (isPromise(action.payload)) {
-      dispatch({ type: 'PROMISE_DISPATCH', action });
-      return action.payload.then(payload => {
-        dispatch({ type: 'PROMISE_RESULT', action, payload });
-      }, payload => {
-        dispatch({ type: 'PROMISE_ERROR', action, payload, error: true });
-      });
-    } else {
-      return pass(action);
+
+export function liftStore(store) {
+  return {
+    ...store,
+    parent: {
+      ...store,
+      replaceReducer() {
+        throw new TypeError();
+      },
+      getState() {
+        const [a,b] = unliftState(store.getState());
+        return a;
+      },
+      dispatch(action) {
+        if (isPromise(action.payload)) {
+          store.dispatch({ type: 'PROMISE_DISPATCH', action });
+          return action.payload.then(payload => {
+            store.dispatch({ type: 'PROMISE_RESULT', action, payload });
+          }, payload => {
+            store.dispatch({ type: 'PROMISE_ERROR', action, payload, error: true });
+          });
+        }
+        return store.dispatch(liftAction('CHILD', action));
+      }
+    },
+    replaceReducer(reducer) {
+      return store.replaceReducer(liftReducer(reducer));
     }
   }
+}
+
+export default function (next : Function) : Function {
+  return (reducer : Function, initialState : any) => liftStore(
+    next(liftReducer(reducer), liftInitialState(initialState))
+  );
 }
