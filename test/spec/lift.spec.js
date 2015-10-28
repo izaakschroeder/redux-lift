@@ -60,25 +60,25 @@ describe('lift', () => {
     function storeX(store) {
       return {
         ...store,
-        dispatch(action) {
-          if (action.type === 'UPCALL') {
-            return store.dispatch({
-              type: 'MESSAGE',
-              payload: action.payload
-            });
+        parent: {
+          ...store,
+          getState() {
+            const [a,b] = unliftState(store.getState());
+            return a;
+          },
+          dispatch(action) {
+            return store.dispatch(liftAction('CHILD', action));
           }
-          return store.dispatch(liftAction('CHILD', action));
+        },
+        replaceReducer(reducer) {
+          return store.replaceReducer(reducerX(reducer));
         }
       }
     }
 
     function enhancer(next : Function) : Function {
       return (reducer : Function, initialState : any) => {
-        const store = next(
-          reducerX(reducer),
-          initialStateX(initialState)
-        );
-        return storeX(store);
+        return storeX(next(reducerX(reducer), initialStateX(initialState)));
       }
     }
 
@@ -91,8 +91,8 @@ describe('lift', () => {
 
 
 
-    store.dispatch({ type: 'UPDATE', value: 5 });
-    store.dispatch({ type: 'UPCALL', payload: 'world' });
+    store.parent.dispatch({ type: 'UPDATE', value: 5 });
+    store.dispatch({ type: 'MESSAGE', payload: 'world' });
 
 
     const state = store.getState();
@@ -101,5 +101,7 @@ describe('lift', () => {
     expect(state).to.have.property(1).to.deep.equal({
       message: 'world'
     });
+
+    expect(store.parent.getState()).to.equal(6);
   });
 });
