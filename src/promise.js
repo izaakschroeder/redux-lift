@@ -4,7 +4,7 @@ import {
   unliftState,
   liftAction,
   unliftAction,
-  unliftStore,
+  liftStore
 } from './lift';
 import isPromise from 'is-promise';
 
@@ -36,32 +36,24 @@ function liftInitialState(initialState) {
   return liftState(initialState, []);
 }
 
-
-export function liftStore(store) {
-  return {
-    ...store,
-    parent: {
-      ...unliftStore(store),
-      dispatch(action) {
-        if (isPromise(action.payload)) {
-          store.dispatch({ type: 'PROMISE_DISPATCH', action });
-          return action.payload.then(payload => {
-            store.dispatch({ type: 'PROMISE_RESULT', action, payload });
-          }, payload => {
-            store.dispatch({ type: 'PROMISE_ERROR', action, payload, error: true });
-          });
-        }
-        return store.dispatch(liftAction('CHILD', action));
-      }
-    },
-    replaceReducer(reducer) {
-      return store.replaceReducer(liftReducer(reducer));
+function liftDispatch(dispatch) {
+  return (action) => {
+    if (isPromise(action.payload)) {
+      dispatch({ type: 'PROMISE_DISPATCH', action });
+      return action.payload.then(payload => {
+        dispatch({ type: 'PROMISE_RESULT', action, payload });
+      }, payload => {
+        dispatch({ type: 'PROMISE_ERROR', action, payload, error: true });
+      });
     }
+    return dispatch(liftAction('CHILD', action));
   }
 }
 
 export default function (next : Function) : Function {
   return (reducer : Function, initialState : any) => liftStore(
-    next(liftReducer(reducer), liftInitialState(initialState))
+    next(liftReducer(reducer), liftInitialState(initialState)),
+    liftReducer,
+    liftDispatch
   );
 }

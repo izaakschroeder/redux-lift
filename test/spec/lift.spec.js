@@ -10,7 +10,7 @@ import {
   unliftState,
   liftAction,
   unliftAction,
-  unliftStore,
+  liftStore,
 } from '../../src/lift';
 
 chai.use(sinonChai);
@@ -38,19 +38,12 @@ function initialStateX(initialState) {
   return liftState(initialState, { message: 'hello' });
 }
 
+function dispatchX(dispatch) {
+  return (action) => dispatch(liftAction('CHILD', action));
+}
+
 function storeX(store) {
-  return {
-    ...store,
-    parent: {
-      ...unliftStore(store),
-      dispatch(action) {
-        return store.dispatch(liftAction('CHILD', action));
-      }
-    },
-    replaceReducer(reducer) {
-      return store.replaceReducer(reducerX(reducer));
-    }
-  }
+  return liftStore(store, reducerX, dispatchX);
 }
 
 function enhancer(next : Function) : Function {

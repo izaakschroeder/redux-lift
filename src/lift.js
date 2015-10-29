@@ -37,3 +37,16 @@ export function unliftStore(store) {
     }
   }
 }
+
+export function liftStore(store, liftReducer, liftDispatch) {
+  return {
+    ...store,
+    parent: {
+      ...unliftStore(store),
+      dispatch: liftDispatch(store.dispatch)
+    },
+    replaceReducer(reducer) {
+      return store.replaceReducer(liftReducer(reducer));
+    }
+  }
+}
