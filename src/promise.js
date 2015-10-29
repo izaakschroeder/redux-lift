@@ -1,5 +1,11 @@
 
-import { liftState, unliftState, liftAction, unliftAction } from './lift';
+import {
+  liftState,
+  unliftState,
+  liftAction,
+  unliftAction,
+  unliftStore,
+} from './lift';
 import isPromise from 'is-promise';
 
 function liftReducer(reducer) {
@@ -32,14 +38,7 @@ export function liftStore(store) {
   return {
     ...store,
     parent: {
-      ...store,
-      replaceReducer() {
-        throw new TypeError();
-      },
-      getState() {
-        const [a,b] = unliftState(store.getState());
-        return a;
-      },
+      ...unliftStore(store),
       dispatch(action) {
         if (isPromise(action.payload)) {
           store.dispatch({ type: 'PROMISE_DISPATCH', action });

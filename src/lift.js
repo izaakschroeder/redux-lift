@@ -25,3 +25,16 @@ export function liftAction(type, action) {
 export function unliftAction({ payload }) {
   return payload;
 }
+
+export function unliftStore(store) {
+  return {
+    ...store,
+    replaceReducer() {
+      throw new TypeError();
+    },
+    getState() {
+      const [a,b] = unliftState(store.getState());
+      return a;
+    }
+  }
+}

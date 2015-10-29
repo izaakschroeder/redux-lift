@@ -6,11 +6,11 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import {
-  liftStore,
   liftState,
+  unliftState,
   liftAction,
   unliftAction,
-  unliftState
+  unliftStore,
 } from '../../src/lift';
 
 chai.use(sinonChai);
@@ -42,14 +42,7 @@ function storeX(store) {
   return {
     ...store,
     parent: {
-      ...store,
-      replaceReducer() {
-        throw new TypeError();
-      },
-      getState() {
-        const [a,b] = unliftState(store.getState());
-        return a;
-      },
+      ...unliftStore(store),
       dispatch(action) {
         return store.dispatch(liftAction('CHILD', action));
       }
