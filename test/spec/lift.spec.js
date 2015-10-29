@@ -22,12 +22,12 @@ function app(state, { type, value }) {
 
 function reducerX(reducer) {
   return (state, action) => {
-    const [a,b] = unliftState(state);
+    const [a,b] = state;
     switch(action.type) {
     case 'CHILD':
-      return liftState(reducer(a, unliftAction(action)), b);
+      return liftState(reducer(unliftState(state), unliftAction(action)), b);
     case 'MESSAGE':
-      return liftState(a, { message: action.payload });
+      return liftState(unliftState(state), { message: action.payload });
     default:
       return state;
     }

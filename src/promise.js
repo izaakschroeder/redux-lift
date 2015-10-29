@@ -10,7 +10,7 @@ import isPromise from 'is-promise';
 
 function liftReducer(reducer) {
   return (state, action) => {
-    const [child, promises] = unliftState(state);
+    const [child, promises] = state;
     switch(action.type) {
     case 'PROMISE_DISPATCH':
       return liftState(child, [ ...promises, action.action.payload ]);
@@ -22,7 +22,10 @@ function liftReducer(reducer) {
         error: action.error,
       }), promises);
     case 'CHILD':
-      return liftState(reducer(unliftAction(action)), promises);
+      return liftState(
+        reducer(unliftState(state), unliftAction(action)),
+        promises
+      );
     default:
       return state;
     }

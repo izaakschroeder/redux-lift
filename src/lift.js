@@ -12,7 +12,7 @@ export function liftState(initialState, liftedInitialState) {
 }
 
 export function unliftState(state) {
-  return state;
+  return state[0];
 }
 
 export function liftAction(type, action) {
@@ -33,8 +33,7 @@ export function unliftStore(store) {
       throw new TypeError('Cannot mutate inner store.');
     },
     getState() {
-      const [a,b] = unliftState(store.getState());
-      return a;
+      return unliftState(store.getState());
     }
   }
 }
