@@ -30,7 +30,7 @@ export function unliftStore(store) {
   return {
     ...store,
     replaceReducer() {
-      throw new TypeError();
+      throw new TypeError('Cannot mutate inner store.');
     },
     getState() {
       const [a,b] = unliftState(store.getState());
