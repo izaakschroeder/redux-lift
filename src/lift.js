@@ -50,3 +50,17 @@ export function liftStore(store, liftReducer, liftDispatch) {
     }
   }
 }
+
+export function lift({
+  liftInitialState,
+  liftReducer,
+  liftDispatch,
+}) {
+  return (next : Function) : Function => {
+    return (reducer : Function, initialState : any) => liftStore(
+      next(liftReducer(reducer), liftInitialState(initialState)),
+      liftReducer,
+      liftDispatch
+    );
+  }
+}

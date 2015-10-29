@@ -4,7 +4,7 @@ import {
   unliftState,
   liftAction,
   unliftAction,
-  liftStore
+  lift,
 } from './lift';
 import isPromise from 'is-promise';
 
@@ -13,7 +13,10 @@ function liftReducer(reducer) {
     const [child, promises] = state;
     switch(action.type) {
     case 'PROMISE_DISPATCH':
-      return liftState(child, [ ...promises, action.action.payload ]);
+      return liftState(
+        unliftState(state),
+        [ ...promises, action.action.payload ]
+      );
     case 'PROMISE_ERROR':
     case 'PROMISE_RESULT':
       return liftState(reducer(child, {
@@ -50,10 +53,8 @@ function liftDispatch(dispatch) {
   }
 }
 
-export default function (next : Function) : Function {
-  return (reducer : Function, initialState : any) => liftStore(
-    next(liftReducer(reducer), liftInitialState(initialState)),
-    liftReducer,
-    liftDispatch
-  );
-}
+export default lift({
+  liftReducer,
+  liftInitialState,
+  liftDispatch
+});
