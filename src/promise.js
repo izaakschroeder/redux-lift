@@ -1,33 +1,47 @@
 
 import {
-  liftState,
-  unliftState,
   liftAction,
   unliftAction,
+  unliftReducer,
   lift,
 } from './lift';
 import isPromise from 'is-promise';
 
+function liftState(child, promises = []) {
+  return {
+    child,
+    promises
+  };
+}
+
+function unliftState({ child }) {
+  return child;
+}
+
+function getState({ promises }) {
+  return promises;
+}
+
 function liftReducer(reducer) {
+
+  const unlifted = unliftReducer(reducer, {
+    unliftState,
+    unliftAction
+  });
+
   return (state, action) => {
-    const [child, promises] = state;
     switch(action.type) {
     case 'PROMISE_DISPATCH':
       return liftState(
         unliftState(state),
-        [ ...promises, action.action.payload ]
+        [ ...getState(state), action.payload ]
       );
     case 'PROMISE_ERROR':
     case 'PROMISE_RESULT':
-      return liftState(reducer(child, {
-        type: action.action.type,
-        payload: action.payload,
-        error: action.error,
-      }), promises);
     case 'CHILD':
       return liftState(
-        reducer(unliftState(state), unliftAction(action)),
-        promises
+        unlifted(state, action),
+        getState(state)
       );
     default:
       return state;
@@ -35,26 +49,31 @@ function liftReducer(reducer) {
   }
 }
 
-function liftInitialState(initialState) {
-  return liftState(initialState, []);
-}
-
 function liftDispatch(dispatch) {
   return (action) => {
     if (isPromise(action.payload)) {
-      dispatch({ type: 'PROMISE_DISPATCH', action });
+      dispatch({ type: 'PROMISE_DISPATCH', payload: action });
       return action.payload.then(payload => {
-        dispatch({ type: 'PROMISE_RESULT', action, payload });
+        dispatch(liftAction('PROMISE_RESULT', {
+          type: action.type,
+          meta: action.meta,
+          payload: payload
+        }));
       }, payload => {
-        dispatch({ type: 'PROMISE_ERROR', action, payload, error: true });
+        dispatch(liftAction('PROMISE_ERROR', {
+          type: action.type,
+          meta: action.meta,
+          payload: payload
+        }));
       });
     }
-    return dispatch(liftAction('CHILD', action));
+    return dispatch(liftAction('PASS', action));
   }
 }
 
 export default lift({
   liftReducer,
-  liftInitialState,
-  liftDispatch
+  liftDispatch,
+  liftState,
+  unliftState
 });

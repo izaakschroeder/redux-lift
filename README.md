@@ -12,6 +12,55 @@ The current primary composition mechanism in [redux] is [middleware]. While usef
 
 Lifting allows you to "lift" your state, reducers and actions into another context. Lifting is a kind of [store enhancer] that is a superset of [middleware].
 
+Indeed, the `applyMiddleware` function can be built trivially using `lift`:
+
+```javascript
+import lift from 'redux-lift';
+
+function applyMiddleware(...args) {
+  // `applyMiddleware` is really just lifting the dispatch function, nothing
+  // more. Everything else is the identity lift.
+  return lift({ liftDispatch: compose(...args) });
+}
+```
+
+But the real power of lifting lies in its ability to manipulate the whole state tree, not just the dispatch function. What can you do with lifting?
+
+ * Implement time-travel for dev-tools,
+ * Keep track of promises for automatic server-side rendering,
+ * Track ephemeral UI state,
+ * Compose multiple redux apps together.
+
+
+```javascript
+import lift from 'redux-lift';
+
+
+export default lift({
+
+});
+```
+
+```javascript
+function TextField({ value, onChange }) {
+  return <input value={value} onChange={onChange} type='text'/>;
+}
+
+function ephemeral() {
+  return connect(function(state) {
+    return {
+      value: state.ephemeral[uniqueKey]
+    }
+  }, function(dispatch) {
+    return {
+      onChange: dispatch('UPDATE_VALUE', uniqueKey)
+    }
+  });
+}
+
+export default ephemeral(TextField);
+```
+
 [redux]: https://github.com/gaearon/redux
 [middleware]: http://rackt.org/redux/docs/advanced/Middleware
 [lifting]: http://stackoverflow.com/questions/2395697

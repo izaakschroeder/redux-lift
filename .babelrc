@@ -1,0 +1,10 @@
+{
+  "presets": [ "es2015" ],
+  "plugins": [
+    "syntax-flow",
+    "syntax-object-rest-spread",
+		"transform-es2015-modules-commonjs",
+		"transform-object-rest-spread",
+    "transform-flow-strip-types"
+  ]
+}
