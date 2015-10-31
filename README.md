@@ -46,19 +46,26 @@ function TextField({ value, onChange }) {
   return <input value={value} onChange={onChange} type='text'/>;
 }
 
-function ephemeral() {
+// https://github.com/rackt/react-redux/blob/master/src/components/connect.js
+function ephemeral(eventMap) {
   return connect(function(state) {
     return {
       value: state.ephemeral[uniqueKey]
     }
   }, function(dispatch) {
     return {
-      onChange: dispatch('UPDATE_VALUE', uniqueKey)
+      onChange: dispatch('EPHEMERAL', uniqueKey)
     }
   });
 }
 
-export default ephemeral(TextField);
+export default ephemeral({
+  events: {
+    onChange(ev) { return { value: ev.target.value; }}
+  }
+})(TextField);
+
+
 ```
 
 [redux]: https://github.com/gaearon/redux

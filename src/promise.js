@@ -1,11 +1,15 @@
 
+import { isFSA } from 'flux-standard-action';
+import isPromise from 'is-promise';
+
 import {
   liftAction,
   unliftAction,
   unliftReducer,
   lift,
 } from './lift';
-import isPromise from 'is-promise';
+
+// https://github.com/acdlite/redux-promise
 
 function liftState(child, promises = []) {
   return {
@@ -51,21 +55,24 @@ function liftReducer(reducer) {
 
 function liftDispatch(dispatch) {
   return (action) => {
-    if (isPromise(action.payload)) {
-      dispatch({ type: 'PROMISE_DISPATCH', payload: action });
-      return action.payload.then(payload => {
-        dispatch(liftAction('PROMISE_RESULT', {
-          type: action.type,
-          meta: action.meta,
-          payload: payload
-        }));
-      }, payload => {
-        dispatch(liftAction('PROMISE_ERROR', {
-          type: action.type,
-          meta: action.meta,
-          payload: payload
-        }));
-      });
+    if (isFSA(action)) {
+      if (isPromise(action.payload)) {
+        dispatch({ type: 'PROMISE_DISPATCH', payload: action });
+        return action.payload.then(payload => {
+          dispatch(liftAction('PROMISE_RESULT', {
+            type: action.type,
+            meta: action.meta,
+            payload: payload,
+          }));
+        }, payload => {
+          dispatch(liftAction('PROMISE_ERROR', {
+            type: action.type,
+            meta: action.meta,
+            payload: payload,
+            error: true,
+          }));
+        });
+      }
     }
     return dispatch(liftAction('PASS', action));
   }
