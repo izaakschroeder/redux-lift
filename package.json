@@ -1,6 +1,6 @@
 {
   "name": "redux-lift",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Store composition for redux.",
   "author": "Izaak Schroeder <izaak.schroeder@gmail.com>",
   "license": "CC0-1.0",

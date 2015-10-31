@@ -42,15 +42,15 @@ export function unliftAction({ payload }) {
  * @param   {[type]} {     unliftState   } [description]
  * @returns {[type]}       [description]
  */
-export function unliftStore(store, { unliftState, liftDispatch }) {
+export function unliftStore(store, { unliftState, liftDispatch, liftReducer }) {
   return {
     // Inherit normal store properties.
     ...store,
     // Raise it.
     dispatch: liftDispatch(store.dispatch),
     // Guard against silliness.
-    replaceReducer() {
-      throw new TypeError('Cannot mutate inner store.');
+    replaceReducer(reducer) {
+      return store.replaceReducer(liftReducer(reducer));
     },
     // Unwrap lifted state.
     getState() {
@@ -66,13 +66,10 @@ export function unliftStore(store, { unliftState, liftDispatch }) {
  * @param   {[type]} options [description]
  * @returns {[type]}         [description]
  */
-export function liftStore(store, { liftReducer, liftDispatch, unliftState }) {
+export function liftStore(store, options) {
   return {
-    ...store,
-    parent: unliftStore(store, { unliftState, liftDispatch }),
-    replaceReducer(reducer) {
-      return store.replaceReducer(liftReducer(reducer));
-    }
+    ...unliftStore(store, options),
+    parent: store,
   }
 }
 
