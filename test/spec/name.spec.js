@@ -11,9 +11,9 @@ import {
   unliftAction,
   liftStore,
   lift,
-} from '../../src/lift';
-
-import { name, normalize } from '../../src/name';
+  name,
+  normalize
+} from '../../src';
 
 chai.use(sinonChai);
 

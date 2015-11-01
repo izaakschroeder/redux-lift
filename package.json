@@ -5,7 +5,7 @@
   "author": "Izaak Schroeder <izaak.schroeder@gmail.com>",
   "license": "CC0-1.0",
   "repository": "izaakschroeder/redux-render",
-  "main": "dist/src/lift.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "prepublish": "./node_modules/.bin/babel -s inline -d dist/src src/",
     "pretest": "npm run prepublish && ./node_modules/.bin/babel -s inline -d dist/test test/",
