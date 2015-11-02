@@ -11,7 +11,7 @@ import {
   unliftAction,
   liftStore,
   lift,
-} from '../../src/lift';
+} from '../../src';
 
 chai.use(sinonChai);
 
