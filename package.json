@@ -4,7 +4,7 @@
   "description": "Store composition for redux.",
   "author": "Izaak Schroeder <izaak.schroeder@gmail.com>",
   "license": "CC0-1.0",
-  "repository": "izaakschroeder/redux-render",
+  "repository": "izaakschroeder/redux-lift",
   "main": "dist/src/index.js",
   "scripts": {
     "prepublish": "./node_modules/.bin/babel -s inline -d dist/src src/",
