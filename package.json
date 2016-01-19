@@ -11,7 +11,7 @@
     "lint": "./node_modules/.bin/eslint --ignore-path .gitignore .",
     "compile": "./node_modules/.bin/babel -s inline -d dist/src src/",
     "dev": "npm run compile -- -w",
-    "spec": "NODE_ENV=test ./node_modules/.bin/mocha --compilers js:babel-core/register -r babel-plugin-transform-adana/dump -R spec test/spec",
+    "spec": "NODE_ENV=test ./node_modules/.bin/mocha --compilers js:babel-core/register -r adana-dump -R spec test/spec",
     "test": "npm run lint && npm run spec"
   },
   "peerDependencies": {
@@ -19,10 +19,10 @@
   },
   "devDependencies": {
     "adana-cli": "^0.1.0",
-    "adana-format-lcov": "^0.1.0",
+    "adana-dump": "^0.1.0",
+    "adana-format-lcov": "^0.1.1",
     "babel-cli": "^6.4.0",
     "babel-core": "^6.4.0",
-    "babel-plugin-transform-adana": "^0.5.0",
     "babel-preset-metalab": "^0.1.4",
     "chai": "^3.4.0",
     "eslint": "^1.10.3",
