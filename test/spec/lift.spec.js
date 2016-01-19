@@ -1,15 +1,11 @@
-require('source-map-support').install();
-
 import { createStore, compose } from 'redux';
 import promiseMiddleware from 'redux-promise';
 import chai, { expect } from 'chai';
-import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import {
   liftAction,
   unliftAction,
-  liftStore,
   lift,
 } from '../../src';
 
@@ -21,17 +17,16 @@ function app(state, { type, value }) {
 }
 
 function liftState(a, b = { message: 'hello' }) {
-  return [a,b]
+  return [ a, b ];
 }
 
-function unliftState([a,b]) {
+function unliftState([ a ]) {
   return a;
 }
 
 function liftReducer(reducer) {
   return (state, action) => {
-    const [a,b] = state;
-    switch(action.type) {
+    switch (action.type) {
     case 'CHILD':
       return liftState(
         reducer(unliftState(state),
@@ -42,7 +37,7 @@ function liftReducer(reducer) {
     default:
       return state;
     }
-  }
+  };
 }
 
 function liftDispatch(dispatch) {
@@ -53,8 +48,8 @@ const enhancer = lift({
   liftState,
   unliftState,
   liftReducer,
-  liftDispatch
-})
+  liftDispatch,
+});
 
 describe('lift', () => {
   it('should return a store-creator function', () => {
@@ -82,7 +77,7 @@ describe('lift', () => {
           return compose(
             ...middlewares.map(middleware => middleware(middlewareAPI))
           )(dispatch);
-        }
+        },
       });
     }
     const creator = applyMiddleware(promiseMiddleware)(createStore);
@@ -91,7 +86,6 @@ describe('lift', () => {
       expect(store.getState()).to.equal(6);
     });
   });
-
 
   describe('parent stores', () => {
     it('should exist', () => {
@@ -114,9 +108,7 @@ describe('lift', () => {
     });
   });
 
-
   it('should do something', () => {
-
     const liftedCreateStore = compose(enhancer)(createStore);
     const store = liftedCreateStore(app, 1);
 
@@ -127,7 +119,7 @@ describe('lift', () => {
 
     expect(state).to.have.property(0, 6);
     expect(state).to.have.property(1).to.deep.equal({
-      message: 'world'
+      message: 'world',
     });
 
     expect(store.parent.getState()).to.equal(6);

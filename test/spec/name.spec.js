@@ -1,18 +1,13 @@
-require('source-map-support').install();
-
 import { createStore, compose } from 'redux';
-import promiseMiddleware from 'redux-promise';
 import chai, { expect } from 'chai';
-import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import {
   liftAction,
   unliftAction,
-  liftStore,
   lift,
   name,
-  normalize
+  normalize,
 } from '../../src';
 
 chai.use(sinonChai);
@@ -23,17 +18,16 @@ function app(state, { type, value }) {
 }
 
 function liftState(a, b = { message: 'hello' }) {
-  return [a,b]
+  return [ a, b ];
 }
 
-function unliftState([a,b]) {
+function unliftState([ a ]) {
   return a;
 }
 
 function liftReducer(reducer) {
   return (state, action) => {
-    const [a,b] = state;
-    switch(action.type) {
+    switch (action.type) {
     case 'CHILD':
       return liftState(
         reducer(unliftState(state),
@@ -44,7 +38,7 @@ function liftReducer(reducer) {
     default:
       return state;
     }
-  }
+  };
 }
 
 function liftDispatch(dispatch) {
@@ -55,11 +49,10 @@ const enhancer = lift({
   liftState,
   unliftState,
   liftReducer,
-  liftDispatch
-})
+  liftDispatch,
+});
 
 describe('name', () => {
-
   describe('named store', () => {
     it('should have a name property', () => {
       const liftedCreateStore = name('enhanced')(enhancer)(createStore);
@@ -89,7 +82,6 @@ describe('name', () => {
       expect(stores).to.have.keys('enhanced1', 'enhanced2', 'default');
     });
 
-
     it('should preserve the store hierarchy', () => {
       const liftedCreateStore = compose(
         name('enhanced1')(enhancer),
@@ -105,7 +97,5 @@ describe('name', () => {
       expect(stores.enhanced3).to.equal(store.parent.parent);
       expect(stores.default).to.equal(store.parent.parent.parent);
     });
-
   });
-
 });
