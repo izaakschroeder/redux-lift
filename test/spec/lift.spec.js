@@ -1,7 +1,9 @@
-import { createStore, compose } from 'redux';
+import { createStore, compose, applyMiddleware } from 'redux';
 import promiseMiddleware from 'redux-promise';
+import thunkMiddleware from 'redux-thunk';
 import chai, { expect } from 'chai';
 import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 
 import {
   liftAction,
@@ -10,9 +12,10 @@ import {
 } from '../../src';
 
 chai.use(sinonChai);
+chai.use(chaiAsPromised);
 
 // Simple reducer.
-function app(state, { type, value }) {
+function app(state = 0, { type, value }) {
   return type === 'UPDATE' ? state + value : state;
 }
 
@@ -25,17 +28,21 @@ function unliftState([ a ]) {
 }
 
 function liftReducer(reducer) {
-  return (state, action) => {
+  return (state = liftState(), action) => {
     switch (action.type) {
     case 'CHILD':
       return liftState(
         reducer(unliftState(state),
-        unliftAction(action)
-      ), state[1]);
+          unliftAction(action)
+        ),
+        state[1]
+      );
     case 'MESSAGE':
       return liftState(unliftState(state), { message: action.payload });
     default:
-      return state;
+      return liftState(reducer(unliftState(state),
+        action
+      ), state[1]);
     }
   };
 }
@@ -85,6 +92,25 @@ describe('lift', () => {
     return store.dispatch(Promise.resolve(5)).then(() => {
       expect(store.getState()).to.equal(6);
     });
+  });
+
+  it('should work with `applyMiddleware`', () => {
+    const liftedCreateStore = compose(
+      enhancer,
+      applyMiddleware(thunkMiddleware, promiseMiddleware)
+    )(createStore);
+    const store = liftedCreateStore(app);
+    // check initial parent state is good
+    expect(store.parent.getState()).to.equal(0);
+    // check initial root state is good
+    expect(store.getState()).to.deep.equal([ 0, { message: 'hello' } ]);
+    // check promise dispatch works
+    const action = { type: 'UPDATE', payload: Promise.resolve(4) };
+    store.parent.dispatch(action);
+    action.payload.then(() => {
+      expect(store.parent.getState()).to.equal(4);
+    });
+    return action.payload;
   });
 
   describe('parent stores', () => {

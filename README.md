@@ -32,6 +32,33 @@ But the real power of lifting lies in its ability to manipulate the whole state 
  * Compose multiple redux apps together.
 
 
+```
+                |
+                V
++--------------\ /----------------------------+  
+|          +---\ /--------------------------+ |
+|   PARENT | DISPATCH -> REDUCER -> [STATE] | |
+|          +----|----------/ \---------Λ----+ |
+|               |           Λ          |      |
+|           LIFT ACTN       |          |      |
+|               |      UNLIFT STATE    |      |
+|               V           |          |      |
+|          +---\ /----------|----------|----+ |
+|   CHILD  | DISPATCH -> REDUCER -> [STATE] | |
+|          +----|----------/ \---------Λ----+ |
++ - - - - - - - | - - - - - Λ - - - - -|- - - +
+|               |           |          |      |
+|           LIFT ACTN       |          |      |
+|               |      UNLIFT STATE    |      |
+|               V           |          |      |
+|          +---\ /----------|----------|----+ |
+| CHILD(N) | DISPATCH -> REDUCER -> [STATE] | |
+|          +---------------/ \--------------+ |
++--------------------------/ \----------------+
+                            Λ
+                            |
+```
+
 ```javascript
 import lift from 'redux-lift';
 
