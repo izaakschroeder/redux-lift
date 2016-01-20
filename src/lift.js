@@ -48,7 +48,7 @@ export function unliftStore(store, { unliftState, liftDispatch }) {
     // Inherit normal store properties.
     ...store,
     // Raise it.
-    dispatch: liftDispatch(store.dispatch),
+    dispatch: liftDispatch(store.dispatch, store),
     // Guard against silliness.
     replaceReducer() {
       throw new TypeError('Cannot mutate inner store.');

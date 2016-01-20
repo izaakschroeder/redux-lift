@@ -18,7 +18,7 @@
     "redux": ">=2.0.0"
   },
   "devDependencies": {
-    "adana-cli": "^0.1.0",
+    "adana-cli": "^0.1.1",
     "adana-dump": "^0.1.0",
     "adana-format-lcov": "^0.1.1",
     "babel-cli": "^6.4.0",

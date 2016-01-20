@@ -15,8 +15,8 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 // Simple reducer.
-function app(state = 0, { type, value }) {
-  return type === 'UPDATE' ? state + value : state;
+function app(state = 0, { type, payload }) {
+  return type === 'UPDATE' ? state + payload : state;
 }
 
 function liftState(a, b = { message: 'hello' }) {
@@ -69,27 +69,34 @@ describe('lift', () => {
     const creator = lift()(createStore);
     const store = creator(app, 1);
     expect(store.getState()).to.equal(1);
-    store.dispatch({ type: 'UPDATE', value: 5 });
+    store.dispatch({ type: 'UPDATE', payload: 5 });
     expect(store.getState()).to.equal(6);
   });
 
-  it.skip('should be able to replace native `applyMiddleware`', () => {
+  it('should be able to replace native `applyMiddleware`', () => {
     // `applyMiddleware` is really just lifting the dispatch function, nothing
     // more. Everything else is the identity lift. This is here in the hopes
     // based Dan will incorporate `redux-lift` or spin off `applyMiddleware`.
     function applyMiddleware(...middlewares) {
-      return lift({
-        liftDispatch(dispatch) {
-          const middlewareAPI = { dispatch };
-          return compose(
-            ...middlewares.map(middleware => middleware(middlewareAPI))
-          )(dispatch);
-        },
+      const enhancer = lift({
+        liftDispatch: (dispatch, store) =>
+          compose(...middlewares.map(middleware => middleware({
+            dispatch,
+            getState: () => store.getState(),
+          })))(dispatch),
       });
+      // The original `applyMiddleware` doesn't isolate the store, so we mimic
+      // that functionality here by returning the parent.
+      return (createStore) =>
+        (reducer, state) =>
+          enhancer(createStore)(reducer, state).parent;
     }
     const creator = applyMiddleware(promiseMiddleware)(createStore);
-    const store = creator(app, 1).parent;
-    return store.dispatch(Promise.resolve(5)).then(() => {
+    const store = creator(app, 1);
+    return store.dispatch({
+      type: 'UPDATE',
+      payload: Promise.resolve(5),
+    }).then(() => {
       expect(store.getState()).to.equal(6);
     });
   });
@@ -107,8 +114,10 @@ describe('lift', () => {
     // check promise dispatch works
     const action = { type: 'UPDATE', payload: Promise.resolve(4) };
     store.parent.dispatch(action);
+    store.dispatch({ type: 'MESSAGE', payload: 'pepperonis' });
     action.payload.then(() => {
       expect(store.parent.getState()).to.equal(4);
+      expect(store.getState()).to.deep.equal([ 4, { message: 'pepperonis' } ]);
     });
     return action.payload;
   });
@@ -129,7 +138,7 @@ describe('lift', () => {
     it('should dispatch correctly', () => {
       const liftedCreateStore = compose(enhancer)(createStore);
       const store = liftedCreateStore(app, 1);
-      store.parent.dispatch({ type: 'UPDATE', value: 5 });
+      store.parent.dispatch({ type: 'UPDATE', payload: 5 });
       expect(store.getState()).to.have.property(0, 6);
     });
   });
@@ -138,7 +147,7 @@ describe('lift', () => {
     const liftedCreateStore = compose(enhancer)(createStore);
     const store = liftedCreateStore(app, 1);
 
-    store.parent.dispatch({ type: 'UPDATE', value: 5 });
+    store.parent.dispatch({ type: 'UPDATE', payload: 5 });
     store.dispatch({ type: 'MESSAGE', payload: 'world' });
 
     const state = store.getState();
