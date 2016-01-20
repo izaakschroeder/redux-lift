@@ -19,14 +19,14 @@ export function liftAction(type, action) {
     type: type,
     payload: action,
     meta: {
-      lift: true
-    }
+      lift: true,
+    },
   };
 }
 
 /**
  * Return the original action from one you've lifted.
- * @param   {[type]} { payload       } [description]
+ * @param   {[type]} payload [description]
  * @returns {[type]}   [description]
  */
 export function unliftAction({ payload }) {
@@ -39,15 +39,16 @@ export function unliftAction({ payload }) {
  * The `replaceReducer` is also overridden, since mutating derived state
  * (which is essentially what an unlifted store is) is undefined.
  * @param   {[type]} store [description]
- * @param   {[type]} {     unliftState   } [description]
- * @returns {[type]}       [description]
+ * @param   {[type]} unliftState foo
+ * @param   {[type]} liftDispatch bar
+ * @returns {[type]} sd
  */
 export function unliftStore(store, { unliftState, liftDispatch }) {
   return {
     // Inherit normal store properties.
     ...store,
     // Raise it.
-    dispatch: liftDispatch(store.dispatch),
+    dispatch: liftDispatch(store.dispatch, store),
     // Guard against silliness.
     replaceReducer() {
       throw new TypeError('Cannot mutate inner store.');
@@ -55,8 +56,8 @@ export function unliftStore(store, { unliftState, liftDispatch }) {
     // Unwrap lifted state.
     getState() {
       return unliftState(store.getState());
-    }
-  }
+    },
+  };
 }
 
 /**
@@ -72,8 +73,8 @@ export function liftStore(store, { liftReducer, liftDispatch, unliftState }) {
     parent: unliftStore(store, { unliftState, liftDispatch }),
     replaceReducer(reducer) {
       return store.replaceReducer(liftReducer(reducer));
-    }
-  }
+    },
+  };
 }
 
 export function unliftReducer(reducer, {
@@ -90,7 +91,7 @@ export function unliftReducer(reducer, {
  * can still access the parent and its normal behavior via the `parent` property
  * however.
  * @param {Object} options Select which parts of the store to lift.
- * @returns {Function} Store enhancer capable of performing the lift.
+ * @returns {Function} Store enhancer capable of including the lift.
  */
 export function lift({
   liftState = identity,
@@ -103,5 +104,5 @@ export function lift({
       next(liftReducer(reducer), liftState(initialState)),
       { liftState, unliftState, liftReducer, liftDispatch }
     );
-  }
+  };
 }
